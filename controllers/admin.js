@@ -30,6 +30,7 @@ exports.postAddProduct = (req, res, next) => {
     });
 };
 
+/*
 exports.getEditProduct = (req, res, next) => {
   const editMode = req.query.edit;
   if (!editMode) {
@@ -100,3 +101,4 @@ exports.postDeleteProduct = (req, res, next) => {
     })
     .catch(err => console.log(err));
 };
+*/
