@@ -1,22 +1,70 @@
+const mongodb = require("mongodb")
 const getDb = require("../util/database").getDb
 
 class Product {
-    constructor(title, price, description, imageUrl) {
+    constructor(title, price, description, imageUrl, id) {
         this.title = title
         this.price = price
         this.description = description
         this.imageUrl = imageUrl
+        this._id = id
     }
 
     save() {
         const db = getDb()
-        db.collection("products").insertOne(this)
-        .then(result => {
-            console.log(result)
-        })
-        .catch(err => {
-            console.log(err)
-        })
+        let dbOp
+        if (this._id) {
+            // Update the product
+
+            dbOp = db
+                .collection("products")
+                //? UPDATE
+                .updateOne(
+                    { _id: new mongodb.ObjectId(this._id) },
+                    { $set: this } //? update
+                )
+        } else {
+            dbOp = db.collection("products").insertOne(this)
+        }
+        return dbOp
+            .then((result) => {
+                console.log(result)
+            })
+            .catch((err) => {
+                console.log(err)
+            })
+    }
+
+    static fetchAll() {
+        //? find all products
+        //? return a cursor
+        const db = getDb()
+        return db
+            .collection("products")
+            .find()
+            .toArray()
+            .then((products) => {
+                console.log(products)
+                return products
+            })
+            .catch((err) => {
+                console.log(err)
+            })
+    }
+
+    static findById(prodId) {
+        const db = getDb()
+        return db
+            .collection("products")
+            .find({ _id: new mongodb.ObjectId(prodId) }) //? object id type of MongoDB
+            .next() //? find the last document
+            .then((product) => {
+                console.log(product)
+                return product
+            })
+            .catch((err) => {
+                console.log(err)
+            })
     }
 }
 
