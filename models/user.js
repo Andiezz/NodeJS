@@ -57,6 +57,7 @@ class User {
         const productIds = this.cart.items.map((i) => {
             return i.productId
         })
+        this.cleanCart()
         console.log(productIds)
         return db
             .collection("products")
@@ -83,7 +84,7 @@ class User {
         return db
             .collection("users")
             .updateOne(
-                { _id: new mongodb.ObjectId(this._id) },
+                { _id: new ObjectId(this._id) },
                 { $set: { cart: { items: updatedCartItems } } }
             )
     }
@@ -101,13 +102,24 @@ class User {
             })
             .then((productIds) => {
                 let updatedCartItems
+                const items = []
+                const products = []
+
                 for (let item of this.cart.items) {
-                    if (!productIds.includes(item.productId)) {
+                    items.push(item.productId.toString())
+                }
+
+                for (let productId of productIds) {
+                    products.push(productId.toString())
+                }
+
+                for (let item of items) {
+                    if (!products.includes(item)) {
                         updatedCartItems = this.cart.items.filter((i) => {
-                            return i.productId.toString() !== item.productId.toString()
+                            return i.productId.toString() !== item
                         })
                         db.collection("users").updateOne(
-                            { _id: new mongodb.ObjectId(this._id) },
+                            { _id: new ObjectId(this._id) },
                             { $set: { cart: { items: updatedCartItems } } }
                         )
                     }

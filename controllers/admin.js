@@ -1,4 +1,5 @@
 const Product = require("../models/product")
+const User = require("../models/user")
 
 exports.getAddProduct = (req, res, next) => {
     res.render("admin/edit-product", {
@@ -95,6 +96,7 @@ exports.postDeleteProduct = (req, res, next) => {
     Product.deleteById(prodId)
         .then((result) => {
             console.log("DESTROYED PRODUCT")
+            req.user.cleanCart()
             res.redirect("/admin/products")
         })
         .catch((err) => console.log(err))
