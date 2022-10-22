@@ -119,10 +119,9 @@ exports.postCartDeleteProduct = (req, res, next) => {
 }
 
 exports.postOrder = (req, res, next) => {
-    let fetchedCart
     req.user
         .addOrder()
-        .then((result) => {
+        .then(() => {
             res.redirect("/orders")
         })
         .catch((err) => console.log(err))

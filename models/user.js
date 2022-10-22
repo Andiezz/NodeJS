@@ -58,7 +58,6 @@ class User {
             return i.productId
         })
         this.cleanCart()
-        console.log(productIds)
         return db
             .collection("products")
             .find({ _id: { $in: productIds } })
