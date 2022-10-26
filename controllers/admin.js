@@ -27,7 +27,7 @@ exports.postAddProduct = (req, res, next) => {
         .save()
         .then((result) => {
             // console.log(result);
-            console.log("Created Product")
+            console.log("CREATED PRODUCT")
             res.redirect("/admin/products")
         })
         .catch((err) => {
@@ -80,6 +80,8 @@ exports.postEditProduct = (req, res, next) => {
 
 exports.getProducts = (req, res, next) => {
     Product.find()
+        // .select("title price -_id")
+        // .populate("userId")
         .then((products) => {
             res.render("admin/products", {
                 prods: products,

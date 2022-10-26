@@ -20,7 +20,7 @@ app.use(bodyParser.urlencoded({ extended: false }))
 app.use(express.static(path.join(__dirname, "public")))
 
 app.use((req, res, next) => {
-    User.findById("63536aa695aff8a2bbba2fff")
+    User.findById("6354a0844b68b83cd2ae48d4")
         .then((user) => {
             // req.user = user //! not the real user
             req.user = user //? mongoose model (can access to all methods)
