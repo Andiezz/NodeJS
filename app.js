@@ -11,9 +11,9 @@ const flash = require("connect-flash")
 const errorController = require("./controllers/error")
 // const mongoConnect = require("./util/database").mongoConnect
 const User = require("./models/user")
+const dbConfig = require("./config/dbConfig")
 
-const MONGODB_URI =
-    "mongodb+srv://AndiexPie6:JnoRVDRbvQXk4kPl@nodejs-learning.odff7nk.mongodb.net/shop?authSource=admin"
+const MONGODB_URI = dbConfig.MONGODB_URI
 
 const app = express()
 const store = new MongoDBStore({

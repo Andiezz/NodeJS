@@ -1,11 +1,12 @@
 const mongodb = require("mongodb")
 const MongoClient = mongodb.MongoClient
+const dbConfig = require("../config/dbConfig")
 
 let _db
 
 const mongoConnect = (callback) => {
     MongoClient.connect(
-        "mongodb+srv://AndiexPie6:JnoRVDRbvQXk4kPl@nodejs-learning.odff7nk.mongodb.net/?retryWrites=true&w=majority"
+        dbConfig.MONGODB_URI
     )
         .then((client) => {
             console.log("Connected!")
