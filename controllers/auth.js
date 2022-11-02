@@ -1,6 +1,7 @@
 const crypto = require("crypto")
 
 const bcrypt = require("bcryptjs")
+const { validationResult } = require("express-validator")
 
 const User = require("../models/user")
 const mailer = require("../util/mailer")
@@ -53,10 +54,19 @@ exports.postLogin = (req, res, next) => {
 
     const email = req.body.email
     const password = req.body.password
+
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+        return res.status(422).render("auth/login", {
+            path: "/login",
+            pageTitle: "Login",
+            errorMessage: errors.array()[0].msg,
+        })
+    }
+
     User.findOne({ email: email })
         .then((user) => {
             if (!user) {
-                req.flash("error", "Invalid email or password.")
                 return res.redirect("/login")
             }
             bcrypt
@@ -85,44 +95,44 @@ exports.postLogin = (req, res, next) => {
 exports.postSignup = (req, res, next) => {
     const email = req.body.email
     const password = req.body.password
-    const confirmPassword = req.body.confirmPassword
+    const errors = validationResult(req)
+
+    if (!errors.isEmpty()) {
+        console.log(errors.array())
+        return res.status(422).render("auth/signup", {
+            path: "/signup",
+            pageTitle: "Signup",
+            errorMessage: errors.array()[0].msg,
+        })
+    }
 
     //? another way is to use mongodb index
-    User.findOne({ email: email })
-        .then((userDoc) => {
-            if (userDoc) {
-                req.flash(
-                    "error",
-                    "E-Mail exists already, please pick a different one!"
-                )
-                return res.redirect("/signup")
-            }
-            return bcrypt
-                .hash(password, 12)
-                .then((hashedPassword) => {
-                    const user = new User({
-                        email: email,
-                        password: hashedPassword,
-                        cart: { items: [] },
-                    })
-                    return user.save()
-                })
-                .then((result) => {
-                    res.redirect("/login")
-                    return mailer.sendMail(
-                        email,
-                        "Signup succeeded!",
-                        `<h1>You successfully signed up!</h1>`
-                    )
-                    // return client.messages
-                    //     .create({
-                    //         to: "+84584702251",
-                    //         body: "Hello from Node",
-                    //         from: "+18316035818",
-                    //     })
-                    //     .then((message) => console.log(message.sid))
-                    //     .done()
-                })
+
+    bcrypt
+        .hash(password, 12)
+        .then((hashedPassword) => {
+            const user = new User({
+                email: email,
+                password: hashedPassword,
+                cart: { items: [] },
+            })
+            return user.save()
+        })
+        .then((result) => {
+            res.redirect("/login")
+            return mailer.sendMail(
+                email,
+                "Signup succeeded!",
+                `<h1>You successfully signed up!</h1>`
+            )
+            // return client.messages
+            //     .create({
+            //         to: "+84584702251",
+            //         body: "Hello from Node",
+            //         from: "+18316035818",
+            //     })
+            //     .then((message) => console.log(message.sid))
+            //     .done()
         })
         .catch((err) => console.log(err))
 }
@@ -225,17 +235,17 @@ exports.postNewPassword = (req, res, next) => {
         resetTokenExpiration: { $gt: Date.now() },
         _id: userId,
     })
-        .then(user => {
+        .then((user) => {
             resetUser = user
             return bcrypt.hash(newPassword, 12)
         })
-        .then(hashedPassword => {
+        .then((hashedPassword) => {
             resetUser.password = hashedPassword
             resetUser.resetToken = null
             resetTokenExpiration = undefined
             return resetUser.save()
         })
-        .then(result => {
+        .then((result) => {
             res.redirect("/login")
             mailer.sendMail(
                 resetUser.email,
