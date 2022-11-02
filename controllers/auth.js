@@ -1,12 +1,13 @@
-const crypto = require("child_process")
+const crypto = require("crypto")
 
 const bcrypt = require("bcryptjs")
 
 const User = require("../models/user")
+const mailer = require("../util/mailer")
 
-const accountSid = "AC0e3b3fb5103776c551a0351afda91d60"
-const authToken = ""
-const client = require("twilio")(accountSid, authToken)
+// const accountSid = "AC0e3b3fb5103776c551a0351afda91d60"
+// const authToken = ""
+// const client = require("twilio")(accountSid, authToken)
 
 exports.getLogin = (req, res, next) => {
     // console.log(req.session.isLoggedIn)
@@ -108,14 +109,19 @@ exports.postSignup = (req, res, next) => {
                 })
                 .then((result) => {
                     res.redirect("/login")
-                    return client.messages
-                        .create({
-                            to: "+84584702251",
-                            body: "Hello from Node",
-                            from: "+18316035818",
-                        })
-                        .then((message) => console.log(message.sid))
-                        .done()
+                    return mailer.sendMail(
+                        email,
+                        "Signup succeeded!",
+                        `<h1>You successfully signed up!</h1>`
+                    )
+                    // return client.messages
+                    //     .create({
+                    //         to: "+84584702251",
+                    //         body: "Hello from Node",
+                    //         from: "+18316035818",
+                    //     })
+                    //     .then((message) => console.log(message.sid))
+                    //     .done()
                 })
         })
         .catch((err) => console.log(err))
@@ -159,19 +165,85 @@ exports.postReset = (req, res, next) => {
                 user.resetTokenExpiration = Date.now() + 3600000
                 return user.save()
             })
-            .then(result => {
+            .then((result) => {
                 res.redirect("/")
-                return client.messages
-                        .create({
-                            to: "+84584702251",
-                            body: "Password reset",
-                            from: "+18316035818",
-                        })
-                        .then((message) => console.log(message.sid))
-                        .done()
+                mailer.sendMail(
+                    req.body.email,
+                    "Password reset",
+                    `<p>You requested a password reset</p>
+                    <p>Click this <a href="http://localhost:3000/reset/${token}">link</a> to set a new password</p>`
+                )
+                // return client.messages
+                //         .create({
+                //             to: "+84584702251",
+                //             body: "Password reset",
+                //             from: "+18316035818",
+                //         })
+                //         .then((message) => console.log(message.sid))
+                //         .done()
             })
             .catch((err) => {
                 console.log(err)
             })
     })
+}
+
+exports.getNewPassword = (req, res, next) => {
+    const token = req.params.token
+    User.findOne({
+        resetToken: token,
+        resetTokenExpiration: { $gt: Date.now() },
+    })
+        .then((user) => {
+            let message = req.flash("error")
+            if (message.length > 0) {
+                message = message[0]
+            } else {
+                message = null
+            }
+            res.render("auth/new-password", {
+                path: "/new-password",
+                pageTitle: "New Password",
+                errorMessage: message,
+                userId: user._id.toString(),
+                passwordToken: token,
+            })
+        })
+        .catch((err) => {
+            console.log(err)
+        })
+}
+
+exports.postNewPassword = (req, res, next) => {
+    const newPassword = req.body.password
+    const userId = req.body.userId
+    const passwordToken = req.body.passwordToken
+    let resetUser
+
+    User.findOne({
+        resetToken: passwordToken,
+        resetTokenExpiration: { $gt: Date.now() },
+        _id: userId,
+    })
+        .then(user => {
+            resetUser = user
+            return bcrypt.hash(newPassword, 12)
+        })
+        .then(hashedPassword => {
+            resetUser.password = hashedPassword
+            resetUser.resetToken = null
+            resetTokenExpiration = undefined
+            return resetUser.save()
+        })
+        .then(result => {
+            res.redirect("/login")
+            mailer.sendMail(
+                resetUser.email,
+                "Reset password succeeded",
+                `<h1>You've successfully resetted your password</h1>`
+            )
+        })
+        .catch((err) => {
+            console.log(err)
+        })
 }
