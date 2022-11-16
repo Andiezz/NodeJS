@@ -53,10 +53,15 @@ app.use((req, res, next) => {
             // req.session.isLoggedIn = true //? set any key you want
             // req.session.user = user //? mongoose does not recognize user model
             // req.user = user //? mongoose model (can access to all methods)
+            if (!user) {
+                return next()
+            }
             req.user = user
             next()
         })
-        .catch((err) => console.log(err))
+        .catch((err) => {
+            throw new Error(err)
+        })
 })
 
 app.use((req, res, next) => {
