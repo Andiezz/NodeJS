@@ -32,6 +32,18 @@ const fileStorage = multer.diskStorage({
     },
 })
 
+const fileFilter = (req, file, cb) => {
+    if (
+        file.mimetype === "image/png" ||
+        file.mimetype === "image/jpg" ||
+        file.mimetype === "image/jpge"
+    ) {
+        cb(null, true) //? (error, accept the file)
+    } else {
+        cb(null, false) //? (error, do not want to store the file)
+    }
+}
+
 app.set("view engine", "ejs")
 app.set("views", "views")
 
@@ -41,7 +53,9 @@ const authRoutes = require("./routes/auth")
 
 //? urlencoded: data is just parsed in the form of text
 app.use(bodyParser.urlencoded({ extended: false }))
-app.use(multer({ storage: fileStorage }).single("image"))
+app.use(
+    multer({ storage: fileStorage, fileFilter: fileFilter }).single("image")
+)
 app.use(express.static(path.join(__dirname, "public")))
 app.use(
     session({

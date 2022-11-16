@@ -49,13 +49,11 @@
             </div>
             <div class="form-control">
                 <label for="description">Description</label>
-                <textarea 
+                <textarea
                     class="<%= validationErrors.find(e => e.param === "description") ? "invalid" : "" %>"
-                    name="description" 
-                    id="description" 
-                    rows="5">
-                        <% if (editing || hasError) { %><%= product.description %><% } %>
-                </textarea>
+                    name="description"
+                    id="description"
+                    rows="5"><% if (editing || hasError) { %><%= product.description %><% } %></textarea>
             </div>
             <% if (editing) { %>
                 <input type="hidden" value="<%= product._id %>" name="productId">
