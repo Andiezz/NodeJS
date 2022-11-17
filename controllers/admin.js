@@ -1,5 +1,7 @@
 const mongoose = require("mongoose")
 
+const fileHelper = require("../util/file")
+
 const { validationResult } = require("express-validator")
 
 const Product = require("../models/product")
@@ -11,7 +13,7 @@ exports.getAddProduct = (req, res, next) => {
         editing: false,
         hasError: false,
         errorMessage: null,
-        validationErrors: []
+        validationErrors: [],
     })
 }
 
@@ -32,7 +34,7 @@ exports.postAddProduct = (req, res, next) => {
                 description: description,
             },
             errorMessage: "Attached file is not an image.",
-            validationErrors: []
+            validationErrors: [],
         })
     }
     const errors = validationResult(req)
@@ -49,7 +51,7 @@ exports.postAddProduct = (req, res, next) => {
                 description: description,
             },
             errorMessage: errors.array()[0].msg,
-            validationErrors: errors.array()
+            validationErrors: errors.array(),
         })
     }
 
@@ -110,7 +112,7 @@ exports.getEditProduct = (req, res, next) => {
                 product: product,
                 hasError: false,
                 errorMessage: null,
-                validationErrors: []
+                validationErrors: [],
             })
         })
         .catch((err) => {
@@ -138,10 +140,10 @@ exports.postEditProduct = (req, res, next) => {
                 title: updatedTitle,
                 price: updatedPrice,
                 description: updatedDesc,
-                _id: prodId
+                _id: prodId,
             },
             errorMessage: errors.array()[0].msg,
-            validationErrors: errors.array()
+            validationErrors: errors.array(),
         })
     }
 
@@ -154,6 +156,7 @@ exports.postEditProduct = (req, res, next) => {
             product.price = updatedPrice
             product.description = updatedDesc
             if (image) {
+                fileHelper.deleteFile(product.imageUrl)
                 product.imageUrl = image.path
             }
             return product.save().then((result) => {
@@ -189,7 +192,14 @@ exports.getProducts = (req, res, next) => {
 
 exports.postDeleteProduct = (req, res, next) => {
     const prodId = req.body.productId
-    Product.deleteOne({ _id: prodId, userId: req.user._id })
+    Product.findById(prodId)
+        .then((product) => {
+            if (!product) {
+                return next(new Error("Product not found!"))
+            }
+            fileHelper.deleteFile(product.imageUrl)
+            return Product.deleteOne({ _id: prodId, userId: req.user._id })
+        })
         .then((result) => {
             console.log("DESTROYED PRODUCT")
             res.redirect("/admin/products")

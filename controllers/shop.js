@@ -185,14 +185,15 @@ exports.getInvoice = (req, res, next) => {
             pdfDoc.text("------------------------")
             let totalPrice = 0
             order.products.forEach(prod => {
-                totalPrice += prod.quantity * prod.product.price
-                pdfDoc.fontSize(14).text(`${prod.product.title} - ${prod.quantity} x $${prod.product.price}`)
+                totalPrice += prod.quantity * prod.productData.price
+                pdfDoc.fontSize(14).text(`${prod.productData.title} - ${prod.quantity} x $${prod.productData.price}`)
             })
             pdfDoc.text("------------------------")
             pdfDoc.fontSize(20).text(`Total price: $${totalPrice}`)
 
             pdfDoc.end()
 
+            //? with small file
             // fs.readFile(invoicePath, (err, data) => {
             //     if (err) {
             //         return next(err)
