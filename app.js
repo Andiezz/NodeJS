@@ -28,20 +28,14 @@ const fileStorage = multer.diskStorage({
         cb(null, "images")
     },
     filename: (req, file, cb) => {
-        cb(null, Date.now() + '-' + file.originalname);
+        cb(null, Date.now() + "-" + file.originalname)
     },
 })
 
+const allowedMimeTypes = ["image/png", "image/jpg", "image/jpeg"]
 const fileFilter = (req, file, cb) => {
-    if (
-        file.mimetype === "image/png" ||
-        file.mimetype === "image/jpg" ||
-        file.mimetype === "image/jpge"
-    ) {
-        cb(null, true) //? (error, accept the file)
-    } else {
-        cb(null, false) //? (error, do not want to store the file)
-    }
+    const allowedFile = allowedMimeTypes.includes(file.mimetype)
+    cb(null, allowedFile)
 }
 
 app.set("view engine", "ejs")

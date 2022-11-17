@@ -17,7 +17,7 @@ router.post(
         body("email")
             .isEmail()
             .withMessage("Please enter a valid email address!")
-            .normalizeEmail()
+            //.normalizeEmail()
             // .custom((value, { req }) => {
             //     return User.findOne({ email: value }).then((user) => {
             //         if (!user) {
@@ -55,8 +55,8 @@ router.post(
                         )
                     }
                 })
-            })
-            .normalizeEmail(),
+            }),
+            //.normalizeEmail(),
         body(
             "password",
             "Please enter a password with only numbers and text and at least 5 characters "
