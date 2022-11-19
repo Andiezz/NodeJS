@@ -6,13 +6,33 @@ const PDFDocument = require("pdfkit")
 const Product = require("../models/product")
 const Order = require("../models/order")
 
+const ITEMS_PER_PAGE = 2
+
 exports.getProducts = (req, res, next) => {
+    const page = +req.query.page || 1
+    let totalItems
+
     Product.find()
+        .countDocuments()
+        .then((numProducts) => {
+            totalItems = numProducts
+            return Product.find()
+                .skip((page - 1) * ITEMS_PER_PAGE)
+                .limit(ITEMS_PER_PAGE)
+        })
         .then((products) => {
             res.render("shop/product-list", {
                 prods: products,
-                pageTitle: "All Products",
+                pageTitle: "Products",
                 path: "/products",
+                //? PAGINATION
+                currentPage: page,
+                totalProducts: totalItems,
+                hasNextPage: ITEMS_PER_PAGE * page < totalItems,
+                hasPreviousPage: page > 1,
+                nextPage: page + 1,
+                previousPage: page - 1,
+                lastPage: Math.ceil(totalItems / ITEMS_PER_PAGE)
             })
         })
         .catch((err) => {
@@ -40,12 +60,30 @@ exports.getProduct = (req, res, next) => {
 }
 
 exports.getIndex = (req, res, next) => {
+    const page = +req.query.page || 1
+    let totalItems
+
     Product.find()
+        .countDocuments()
+        .then((numProducts) => {
+            totalItems = numProducts
+            return Product.find()
+                .skip((page - 1) * ITEMS_PER_PAGE)
+                .limit(ITEMS_PER_PAGE)
+        })
         .then((products) => {
             res.render("shop/index", {
                 prods: products,
                 pageTitle: "Shop",
                 path: "/",
+                //? PAGINATION
+                currentPage: page,
+                totalProducts: totalItems,
+                hasNextPage: ITEMS_PER_PAGE * page < totalItems,
+                hasPreviousPage: page > 1,
+                nextPage: page + 1,
+                previousPage: page - 1,
+                lastPage: Math.ceil(totalItems / ITEMS_PER_PAGE)
             })
         })
         .catch((err) => {
@@ -180,13 +218,17 @@ exports.getInvoice = (req, res, next) => {
 
             pdfDoc.fontSize(26).text("Invoice", {
                 underline: true,
-                textIndent: true
+                textIndent: true,
             })
             pdfDoc.text("------------------------")
             let totalPrice = 0
-            order.products.forEach(prod => {
+            order.products.forEach((prod) => {
                 totalPrice += prod.quantity * prod.productData.price
-                pdfDoc.fontSize(14).text(`${prod.productData.title} - ${prod.quantity} x $${prod.productData.price}`)
+                pdfDoc
+                    .fontSize(14)
+                    .text(
+                        `${prod.productData.title} - ${prod.quantity} x $${prod.productData.price}`
+                    )
             })
             pdfDoc.text("------------------------")
             pdfDoc.fontSize(20).text(`Total price: $${totalPrice}`)
